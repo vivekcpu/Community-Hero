@@ -1,4 +1,4 @@
-# 🏅 Community Hero — Civic Issue-Reporting & Gamification Platform
+# [🏅 Community Hero — Civic Issue-Reporting & Gamification Platform](https://community-hero-76238719535.asia-southeast1.run.app)
 
 Welcome to **Community Hero**, a state-of-the-art, full-stack civic engagement and issue-reporting platform. Engineered with **React**, **Express**, and **Gemini Multimodal AI**, Community Hero transforms the chore of community reporting into an engaging, gamified social experience.
 
