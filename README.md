@@ -107,39 +107,39 @@ Community Hero uses a **monolithic full-stack TypeScript** architecture — a si
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         Client (Browser)                         │
-│   React 19 SPA · Redux Toolkit store · Tailwind CSS · Motion      │
+│                         Client (Browser)                        │
+│   React 19 SPA · Redux Toolkit store · Tailwind CSS · Motion    │
 └───────────────────────────────┬────────────────────────────────┘
                                  │ Axios (REST, cookies/JWT)
                                  ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Express Server (server.ts)                   │
+│                     Express Server (server.ts)                  │
 │  ┌───────────────┐  ┌──────────────┐  ┌────────────────────┐    │
-│  │  /api/auth     │  │ /api/reports │  │ /api/leaderboard    │    │
-│  │  /api/admin    │  │ /api/users   │  │ /api/notices         │    │
-│  │  /api/geocode  │  │ /api/health  │  │                      │    │
-│  └───────┬───────┘  └──────┬───────┘  └──────────┬───────────┘    │
-│          │  Middleware: CORS · cookie-parser · JWT auth guard ·   │
-│          │              Multer (file uploads) · error handler     │
-│          ▼                 ▼                     ▼                │
-│   controllers/*.ts   controllers/*.ts     controllers/*.ts        │
+│  │  /api/auth    │  │ /api/reports │  │ /api/leaderboard   │    │
+│  │  /api/admin   │  │ /api/users   │  │ /api/notices       │    │
+│  │  /api/geocode │  │ /api/health  │  │                    │    │
+│  └───────┬───────┘  └──────┬───────┘  └──────────┬─────────┘    │
+│          │  Middleware: CORS · cookie-parser · JWT auth guard · │
+│          │              Multer (file uploads) · error handler   │
+│          ▼                 ▼                     ▼              │
+│   controllers/*.ts   controllers/*.ts     controllers/*.ts      │
 └───────┬───────────────────┬───────────────────────┬──────────────┘
         │                   │                        │
         ▼                   ▼                        ▼
 ┌──────────────┐   ┌─────────────────┐   ┌─────────────────────────┐
-│  MongoDB      │   │  Gemini AI       │   │  Cloudinary              │
-│  (Mongoose)   │   │ (@google/genai)  │   │  (image/audio storage)   │
-│  ↳ fallback:  │   │ ↳ multi-model    │   │  ↳ fallback: placeholder │
-│  in-memory DB │   │ failover + retry │   │  media URLs               │
+│  MongoDB     │   │  Gemini AI      │   │  Cloudinary             │
+│  (Mongoose)  │   │ (@google/genai) │   │  (image/audio storage)  │
+│  ↳ fallback: │   │ ↳ multi-model   │   │  ↳ fallback: placeholder│
+│  in-memory DB│   │ failover + retry│   │  media URLs             │
 └──────────────┘   └─────────────────┘   └─────────────────────────┘
         │
         ▼
 ┌──────────────┐        ┌───────────────────────────────┐
-│  Redis        │        │ Google Maps Geocoding/Geolocation│
-│  (ioredis)    │        │ ↳ fallback: OpenStreetMap        │
-│  ↳ fallback:  │        │   Nominatim → raw coordinates     │
-│  in-memory    │        └───────────────────────────────┘
-│  cache        │
+│  Redis       │        │ Google Maps Geocoding         │
+│  (ioredis)   │        │ ↳ fallback: OpenStreetMap     │
+│  ↳ fallback: │        │   Nominatim → raw coordinates │
+│  in-memory   │        └───────────────────────────────┘
+│  cache       │
 └──────────────┘
 ```
 
