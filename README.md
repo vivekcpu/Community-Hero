@@ -209,7 +209,7 @@ npm run dev
 Open `http://localhost:3000` inside your browser to start exploring!
 
 ### 3. Verification & Auditing
-Run the codebase linter and production compiler to ensure syntax compliance:
+Run the codebase:
 ```bash
 # Verify static typings
 npm run lint
@@ -220,4 +220,4 @@ npm run build
 
 ---
 
-b! You can easily share your code, invite collaborators, and hook up continuous integration.
+
