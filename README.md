@@ -500,8 +500,7 @@ Please run `npm run lint` before submitting a PR to ensure type safety.
 
 ## 📄 License
 
-This project is provided as-is for educational and community-benefit purposes. Add a `LICENSE` file to formally define usage terms.
-
+This project is provided as-is for educational and community-benefit purposes.
 ---
 
 <p align="center">Made with ❤️ for stronger, more responsive communities — powered by Google AI Studio & Gemini.</p>
