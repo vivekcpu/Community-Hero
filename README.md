@@ -1,223 +1,507 @@
-# 🏅 Community Hero — Civic Issue-Reporting & Gamification Platform
+# 🦸 Community Hero
 
-Welcome to **Community Hero**, a state-of-the-art, full-stack civic engagement and issue-reporting platform. Engineered with **React**, **Express**, and **Gemini Multimodal AI**, Community Hero transforms the chore of community reporting into an engaging, gamified social experience.
+**Gamified civic-issue reporting platform** — snap a photo or record your voice, let AI classify and describe the problem, and watch it land on a live community feed complete with upvotes, comments, XP, coins, badges, a leaderboard, and an admin command center.
 
-Residents can snap photographs of infrastructure damage or record voice complaints, watch as **Gemini 3.5 Flash** instantly transcribes, classifies, and evaluates the reports, upvote neighbors' posts, view issues on a vector neighborhood grid, and earn gold coins, levels, and milestone achievements.
+### 🔗 Live App
+**[https://community-hero-76238719535.asia-southeast1.run.app](https://community-hero-76238719535.asia-southeast1.run.app/auth)**
+
+> 🧠 Built with **[Google AI Studio](https://aistudio.google.com/)** — scaffolded, iterated, and shipped using AI Studio's build environment and Gemini API.
 
 ---
 
-## 🗺️ Interactive System Architecture & Workflow
+## 📖 Table of Contents
 
-Here is how data flows through **Community Hero** when a civic report is submitted:
+- [Overview](#-overview)
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Architecture](#-architecture)
+- [Folder Structure](#-folder-structure)
+- [Getting Started (Local Setup)](#-getting-started-local-setup)
+- [Environment Variables](#-environment-variables)
+- [Available Scripts](#-available-scripts)
+- [API Reference](#-api-reference)
+- [Gamification System](#-gamification-system)
+- [Resilience & Fallback Design](#-resilience--fallback-design)
+- [Deployment](#-deployment)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-```text
- ┌────────────────────────────────────────────────────────────────────────┐
- │                           USER / CLIENT SIDE                           │
- └───────────────────┬────────────────────────────────┬───────────────────┘
-                     │ (Image Upload / Voice Audio)   │ (Upvotes / Chat)
-                     ▼                                ▼
- ┌────────────────────────────────────────────────────────────────────────┐
- │                   EXPRESS BACKEND ENGINE (PORT 3000)                   │
- └───────────────────┬────────────────────────────────┬───────────────────┘
-                     │                                │
-                     │ If Assets Uploaded             │ Analyze Payload
-                     ▼                                ▼
- ┌───────────────────────────────┐        ┌───────────────────────────────┐
- │   CLOUDINARY MEDIA STORAGE    │        │      GEMINI AI PROTOCOL       │
- │   (Secure storage fallback)   │        │     (SDK Call via Node)       │
- └───────────────┬───────────────┘        └───────────────┬───────────────┘
-                 │                                        │
-                 ▼ URL Reference                          ▼ Structured JSON
- ┌────────────────────────────────────────────────────────────────────────┐
- │                       DATA PERSISTENCE CONTROLLER                      │
- ├────────────────────────────────────────────────────────────────────────┤
- │  Primary Mode: MongoDB + Redis Cache                                   │
- │  Resilient Mode: High-Performance, Self-Seeding In-Memory Database    │
- └───────────────────────────────────┬────────────────────────────────────┘
-                                     │
-                                     ▼ Saves State
- ┌────────────────────────────────────────────────────────────────────────┐
- │                         ADMIN CONTROL STATION                         │
- │     - Urgency Assessment  - AI Remediation Chat  - Moderation Engine    │
- └────────────────────────────────────────────────────────────────────────┘
+---
+
+## 🌍 Overview
+
+**Community Hero** turns everyday citizens into civic reporters. Users can:
+
+1. Snap a photo of a civic issue (pothole, overflowing bin, broken streetlight, water leak, etc.) or record a voice complaint.
+2. Let **Gemini AI** auto-classify the issue, estimate severity, and generate a clean, professional description (or transcript).
+3. Submit the report — pinned to a live map location — to a public community feed.
+4. Earn **XP, coins, and badges**, level up, and climb the **leaderboard**.
+5. Engage with other reports via **upvotes and threaded comments**.
+6. Municipal admins get a dedicated **dashboard** to triage, prioritize (AI urgency scoring), resolve complaints, moderate users, and post public **notices** — plus an AI chatbot assistant.
+
+---
+
+## ✨ Features
+
+### 👤 Citizen-Facing
+- **Email/password auth** + **Google OAuth 2.0** login
+- **AI Image Analysis ("Snap & Assess")** — upload a photo, Gemini returns category, severity (1–10), and description
+- **AI Voice Reports ("Hero Voice")** — record audio, Gemini transcribes + summarizes + classifies it
+- **Geolocation-aware reporting** — auto-detects location via browser geolocation, Google Geocoding API, or IP-based fallback, with reverse-geocoded human-readable addresses
+- **Community feed** with category/status filters, pagination, upvoting, and threaded comments
+- **Gamification** — XP, coins, levels, unlockable badges, and a **Redeem Store** to spend coins
+- **Leaderboard** — global XP-based rankings with the current user's live rank
+- **Public Notices board** for municipal announcements
+- **User profiles** — avatars, stats, badge showcase, activity history
+- **Responsive, glassmorphic UI** with smooth animations (Framer Motion)
+
+### 🛠️ Admin-Facing
+- Secure, separate **admin authentication** (JWT, role-guarded)
+- **Dashboard analytics** — stats overview on complaints, users, and activity
+- **Complaint management** — view, filter, and update report status (Active / Pending / Resolved)
+- **AI Urgency Scoring** — Gemini ranks and justifies which open complaints need attention first
+- **AI Suggestions** — Gemini recommends resolution steps per report
+- **AI Admin Chatbot** — conversational assistant for querying platform data
+- **User moderation** — view all users, ban, or delete accounts
+- **Notices CRUD** — publish/edit/delete public community notices
+
+### ⚙️ Platform Engineering
+- **Self-healing infrastructure**: runs fully even without MongoDB, Redis, Cloudinary, or a Gemini key — gracefully degrading to in-memory data stores, mock media URLs, and heuristic AI fallbacks so the app is never "broken" in a fresh environment
+- **Multi-model Gemini failover** with quota/`429` cooldown tracking and `503` retry-with-backoff logic across several Gemini model variants
+- **Robust JSON repair layer** for parsing occasionally malformed LLM output
+- **Single Express server** serving both the API and the Vite-built SPA (dev: Vite middleware; prod: static build)
+
+---
+
+## 🧰 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Frontend Framework** | React 19 + TypeScript |
+| **Build Tool** | Vite 6 |
+| **Styling** | Tailwind CSS 4 (`@tailwindcss/vite`, `@tailwindcss/typography`) |
+| **Routing** | React Router DOM 7 |
+| **State Management** | Redux Toolkit + React-Redux + Redux Persist |
+| **Animation** | Motion (Framer Motion) |
+| **Icons** | Lucide React |
+| **HTTP Client** | Axios |
+| **Markdown Rendering** | react-markdown + remark-gfm |
+| **Backend Runtime** | Node.js + Express 4 |
+| **Language (server)** | TypeScript, executed via `tsx` |
+| **Database** | MongoDB via Mongoose (with automatic in-memory fallback) |
+| **Cache / Sessions** | Redis via ioredis (with automatic in-memory fallback) |
+| **Authentication** | JWT (jsonwebtoken) + bcryptjs (password hashing) + Google OAuth 2.0 (`google-auth-library`) |
+| **AI / LLM** | Google Gemini API (`@google/genai`) — multimodal image & audio analysis, urgency scoring, chatbot |
+| **Media Storage** | Cloudinary (image & audio uploads, with placeholder fallback) |
+| **Geolocation** | Google Geolocation & Geocoding APIs + OpenStreetMap Nominatim fallback |
+| **File Uploads** | Multer |
+| **Bundling (server build)** | esbuild |
+| **Dev/Build Platform** | Google AI Studio |
+| **Hosting** | Google Cloud Run |
+
+---
+
+## 🏗️ Architecture
+
+Community Hero uses a **monolithic full-stack TypeScript** architecture — a single Express server handles both the REST API and (in production) the static SPA bundle, simplifying deployment to a single Cloud Run service.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         Client (Browser)                         │
+│   React 19 SPA · Redux Toolkit store · Tailwind CSS · Motion      │
+└───────────────────────────────┬────────────────────────────────┘
+                                 │ Axios (REST, cookies/JWT)
+                                 ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     Express Server (server.ts)                   │
+│  ┌───────────────┐  ┌──────────────┐  ┌────────────────────┐    │
+│  │  /api/auth     │  │ /api/reports │  │ /api/leaderboard    │    │
+│  │  /api/admin    │  │ /api/users   │  │ /api/notices         │    │
+│  │  /api/geocode  │  │ /api/health  │  │                      │    │
+│  └───────┬───────┘  └──────┬───────┘  └──────────┬───────────┘    │
+│          │  Middleware: CORS · cookie-parser · JWT auth guard ·   │
+│          │              Multer (file uploads) · error handler     │
+│          ▼                 ▼                     ▼                │
+│   controllers/*.ts   controllers/*.ts     controllers/*.ts        │
+└───────┬───────────────────┬───────────────────────┬──────────────┘
+        │                   │                        │
+        ▼                   ▼                        ▼
+┌──────────────┐   ┌─────────────────┐   ┌─────────────────────────┐
+│  MongoDB      │   │  Gemini AI       │   │  Cloudinary              │
+│  (Mongoose)   │   │ (@google/genai)  │   │  (image/audio storage)   │
+│  ↳ fallback:  │   │ ↳ multi-model    │   │  ↳ fallback: placeholder │
+│  in-memory DB │   │ failover + retry │   │  media URLs               │
+└──────────────┘   └─────────────────┘   └─────────────────────────┘
+        │
+        ▼
+┌──────────────┐        ┌───────────────────────────────┐
+│  Redis        │        │ Google Maps Geocoding/Geolocation│
+│  (ioredis)    │        │ ↳ fallback: OpenStreetMap        │
+│  ↳ fallback:  │        │   Nominatim → raw coordinates     │
+│  in-memory    │        └───────────────────────────────┘
+│  cache        │
+└──────────────┘
 ```
 
-1. **Multimodal Capture**: The user snaps a photo or records a verbal grievance.
-2. **Buffer Streaming**: The server streams files to Cloudinary (or switches to resilient base64/placeholder formats if Cloudinary credentials are absent).
-3. **Gemini Inspection**:
-   - **Image Analysis**: Analyzes visual cues, auto-categories the issue (e.g. `Infrastructure`, `Waste`), assigns a priority score (1-10), and generates a description.
-   - **Voice Transcription**: Transcribes voice recordings verbatim, cleans up grammatical slips, and produces a professional, actionable summary.
-4. **Gamification Processing**: The reporting engine awards the user **+10 XP** and **+10 Coins**, updating their global level, streaks, and auditing eligibility for custom milestone badges.
-5. **Admin Intervention**: City officials access the Admin Dashboard to trigger the **AI Urgency Pipeline** (providing deep risk analysis), request AI-generated remediation tips, and converse with the **Admin Assist chatbot** for strategic resolution.
+**Key architectural decisions:**
+
+- **Zero-config-friendly**: every external dependency (MongoDB, Redis, Cloudinary, Gemini, Google OAuth) is optional at runtime. Missing config triggers automatic, transparent fallbacks (in-memory store / mock media / heuristic AI responses) rather than crashing — ideal for demos, evaluation, and AI Studio's environment.
+- **Layered backend**: `routes → middleware → controllers → models/utils`, keeping request validation, auth, and business logic cleanly separated.
+- **Client state**: Redux Toolkit slices (`auth`, `reports`, `leaderboard`, `user`) persisted via `redux-persist` for a seamless refresh experience.
+- **AI resilience**: `callGeminiWithRetry` cycles through multiple Gemini model variants, respects per-model cooldowns on quota exhaustion (`429`), retries transient `503`s with backoff, and `safeJsonParse` repairs slightly malformed model output before falling back to regex extraction.
 
 ---
 
-## 🛠️ The Tech Stack
+## 📁 Folder Structure
 
-| Layer | Technologies & Libraries | Key Responsibilities |
-| :--- | :--- | :--- |
-| **Frontend UI** | React 19, Tailwind CSS, Redux Toolkit, Lucide React, Framer Motion | High-performance client, Duolingo-style bouncy navigation, real-time feedback loops, customizable state streams. |
-| **Backend API** | Node.js, Express, TSX | Robust RESTful endpoint network, JWT auth verification, Vite dev middleware. |
-| **AI Intelligence**| Google `@google/genai` (Gemini SDK) | Image feature recognition, speech-to-text translation, risk/urgency evaluation, AI-led chatbot assistance. |
-| **Database & Cache**| Mongoose (MongoDB) & Redis Client | Hard-durable storage schema, high-speed user caching. |
-| **Resilient Failovers**| Custom Memory DB & Fallback Vectors | Fully self-sufficient local simulation mode which launches with sample reports, comments, and profile nodes if MongoDB/Redis are offline. |
-
----
-
-## 🌟 Core Features & Modules
-
-### 👩‍💻 User Experience
-- **Snap & Assess (AI Vision)**: Snap a picture of trash accumulation, potholes, or structural damage. Gemini instantly reads the visual evidence to structure the data, removing manual classification chores.
-- **Hero Voice (Speech Processing)**: Verbalize your complaint! Built-in audio recorder plots real-time wave visuals and passes the voice packet to Gemini to transcribe, grammar-correct, and outline.
-- **Duolingo Gamification Engine**:
-  - **Dynamic Level Progress**: Earn XP to fill up progress bars; Level Up events fire automatically on exceeding the 500 XP step-threshold.
-  - **Golden Coins**: Earn coins to redeem actual rewards or cosmetic title enhancements in the community store.
-  - **Badge Wall**: Unlock achievements like *First Report*, *Pothole Patrol*, *Trash Tamer*, and *Civic Champion* based on active contributions.
-- **Interactive Neighborhood Map**: An elegant vector coordinate layout representing local district grids, placing custom visual pins for unresolved community issues with quick categorization filter tags.
-- **Social Interaction**: Community social boards with real-time text searching, category toggles, detailed upvote counts, and interactive discussion panels.
-
-### 👮‍♂️ Administrative & Moderation Center (Credentials: `admin` / `hero`)
-- **Global Overview Stats**: Track aggregate reports, resolution progress ratios, total registered users, and system integrity status.
-- **AI Urgency Pipeline**: One-click AI triage. Evaluates combined parameters (severity, upvotes, description, user profile history) to output an advanced risk score with deep qualitative safety justifications.
-- **AI Remediation Suggestions**: Instructs Gemini to parse report parameters and output discrete, actionable steps for city engineers to resolve the issue safely and efficiently.
-- **Admin Assist Chatbot**: An embedded, contextual AI assistant programmed with civic ordinance guidelines to help administrators draft notifications, evaluate priority tickets, and design community responses.
-- **Moderation Tools**: Direct controls to update report resolution phases (e.g., `Pending` ➡️ `In Progress` ➡️ `Resolved`), delete reports, or ban users from community interaction.
-
----
-
-## 📂 Project Structure & Directories
-
-```text
+```
 community-hero/
-├── server.ts                       # Entrypoint Express Server & Development Vite Integrator
-├── server/                         # Main Backend Service Layer
+├── server/                        # Backend (Express + TypeScript)
 │   ├── config/
-│   │   └── cloudinary.ts           # Media uploads handler (Cloudinary API integration)
+│   │   └── cloudinary.ts          # Cloudinary SDK config
 │   ├── controllers/
-│   │   ├── adminController.ts      # Admin dashboard operations (stats, AI urgency, remediation, chatbot)
-│   │   ├── authController.ts       # Authentication workflows (JWT creation, session stores)
-│   │   ├── leaderboardController.ts# High-score user list caching
-│   │   ├── reportController.ts     # Core reporting logic (Gemini vision, voice transcription, rewards)
-│   │   └── userController.ts       # User profiles, avatar updates, and shop redemption
-│   ├── db.ts                       # Primary MongoDB + Redis connection handlers with resilient In-Memory fallbacks
+│   │   ├── adminController.ts     # Admin auth, stats, moderation, AI urgency/suggestions/chatbot
+│   │   ├── authController.ts      # Register/login/logout, Google OAuth flow
+│   │   ├── leaderboardController.ts
+│   │   ├── reportController.ts    # Image/audio AI analysis, CRUD, upvotes, comments
+│   │   └── userController.ts      # Profiles, avatar updates, redeem store, delete
 │   ├── middleware/
-│   │   ├── authMiddleware.ts       # Express security shields & session checkers
-│   │   ├── errorMiddleware.ts      # Standardized unified exception filters
-│   │   └── multerMiddleware.ts     # Upload buffer interface for incoming files
-│   ├── models/
-│   │   ├── Comment.ts              # Report Comment Schema & models
-│   │   ├── Notice.ts               # Admin Bulletin board announcement schemas
-│   │   ├── Report.ts               # Civic Report Schema, coordinate metrics & state indicators
-│   │   └── User.ts                 # User Gamification profiles, coin counters, and unlockable badges
-│   └── routes/
-│       ├── adminRoutes.ts          # Admin protected route list
-│       ├── authRoutes.ts           # User authentication routes
-│       ├── leaderboardRoutes.ts    # Ranked user board routes
-│       ├── noticeRoutes.ts         # Announcement board routes
-│       ├── reportRoutes.ts         # Report collection & submission routes
-│       └── userRoutes.ts           # Profile fetch, edit, and reward routes
-├── src/                            # Frontend Application Layer (Vite + React)
+│   │   ├── authMiddleware.ts      # JWT `protect` guard
+│   │   ├── errorMiddleware.ts     # Centralized error handler
+│   │   └── multerMiddleware.ts    # Multipart/form-data upload config
+│   ├── models/                    # Mongoose schemas
+│   │   ├── Comment.ts
+│   │   ├── Notice.ts
+│   │   ├── Report.ts
+│   │   └── User.ts
+│   ├── routes/                    # Express routers per resource
+│   │   ├── adminRoutes.ts
+│   │   ├── authRoutes.ts
+│   │   ├── leaderboardRoutes.ts
+│   │   ├── noticeRoutes.ts
+│   │   ├── reportRoutes.ts
+│   │   └── userRoutes.ts
+│   ├── utils/
+│   │   └── ai.ts                  # Gemini client, multi-model retry/failover, safeJsonParse
+│   └── db.ts                      # MongoDB + Redis connections & in-memory fallbacks
+│
+├── src/                            # Frontend (React + TypeScript)
 │   ├── api/
-│   │   └── axiosInstance.ts        # Modular HTTP network client (with token interceptors & auto-auth redirects)
+│   │   ├── axiosInstance.ts       # Configured Axios client
+│   │   └── geoService.ts          # Geolocation/geocoding client helpers
 │   ├── components/
-│   │   ├── admin/
-│   │   │   ├── AdminChatModal.tsx  # Contextual admin assistant conversational panel
-│   │   │   ├── AdminUsersModal.tsx # Moderator user lists, deletion, and ban control switches
-│   │   │   └── NoticeForm.tsx      # Multi-field news bulletin form
-│   │   ├── feed/
-│   │   │   ├── CommentSection.tsx  # Scrollable comment rows, additions, and time logs
-│   │   │   ├── FeedPage.tsx        # Dashboard, search bars, category tags, map togglers
-│   │   │   └── ReportCard.tsx      # Elegant cards displaying badges, upvotes, images, and audio controls
-│   │   ├── layout/
-│   │   │   ├── BottomNav.tsx       # Standard modern bottom navigation dock
-│   │   │   └── TopBar.tsx          # Dynamic top header mapping XP progress and Golden Coins
-│   │   ├── leaderboard/
-│   │   │   └── LeaderboardPage.tsx # Gamified rank podiums and list tracking
-│   │   ├── notices/
-│   │   │   └── NoticesPage.tsx     # Clean admin news feed lists
-│   │   ├── profile/
-│   │   │   └── ProfilePage.tsx     # Custom user summaries, progress metrics, and unlocked badge arrays
-│   │   ├── report/
-│   │   │   ├── ImageReport.tsx     # Visual camera/upload input and Gemini analyzer
-│   │   │   ├── ReportPage.tsx      # Main wizard interface for new reports
-│   │   │   └── VoiceReport.tsx     # Custom microphone audio visualizer & transcription processor
-│   │   ├── store/
-│   │   │   └── RedeemStore.tsx     # Storefront allowing users to trade golden coins for rewards
-│   │   └── ui/                     # Beautiful, reusable design components
-│   │       ├── Badge.tsx           # Category colored pills
-│   │       ├── CoinDisplay.tsx     # Glowing gold coin trackers
-│   │       ├── GlassCard.tsx       # Frosted glass overlay component
-│   │       ├── NeoCard.tsx         # Responsive flat bounce borders
-│   │       ├── SeverityBar.tsx     # Color-coded urgency scale indicators (1-10)
-│   │       └── XpBar.tsx           # High-precision custom level loaders
+│   │   ├── admin/                 # AdminUsersModal
+│   │   ├── feed/                  # FeedPage, ReportCard, CommentSection
+│   │   ├── layout/                # TopBar, BottomNav
+│   │   ├── leaderboard/           # LeaderboardPage
+│   │   ├── notices/                # NoticesPage
+│   │   ├── profile/                # ProfilePage
+│   │   ├── report/                 # ReportPage, ImageReport, VoiceReport
+│   │   ├── store/                  # RedeemStore
+│   │   └── ui/                     # Badge, CoinDisplay, GlassCard, NeoCard, SeverityBar, XpBar
+│   ├── hooks/
+│   │   └── useGeolocation.ts
 │   ├── pages/
-│   │   ├── AdminPage.tsx           # Fully featured admin control hub and metrics graphs
-│   │   ├── AuthPage.tsx            # Animated Auth entry with custom error feedback
-│   │   └── HomePage.tsx            # Authenticated application manager & toast systems
-│   ├── store/
-│   │   ├── index.ts                # Redux store configurations
-│   │   └── slices/                 # State management slices (auth, report feeds, leaderboards)
-│   ├── types.ts                    # Centralized TypeScript interfaces and declarations
-│   ├── main.tsx                    # Web build entry point
-│   └── index.css                   # Global font schemes, custom variables, and active keyframes
-└── package.json                    # Application metadata, scripts, and package listings
+│   │   ├── AdminPage.tsx
+│   │   ├── AuthPage.tsx
+│   │   ├── HomePage.tsx
+│   │   └── ProfileViewPage.tsx
+│   ├── store/                      # Redux Toolkit
+│   │   ├── slices/
+│   │   │   ├── authSlice.ts
+│   │   │   ├── leaderboardSlice.ts
+│   │   │   ├── reportsSlice.ts
+│   │   │   └── userSlice.ts
+│   │   └── index.ts
+│   ├── App.tsx
+│   ├── index.css
+│   ├── main.tsx
+│   └── types.ts
+│
+├── server.ts                       # Entry point — Express app, Vite middleware/static serving
+├── .env.example                    # Environment variable template
+├── index.html
+├── metadata.json
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+└── README.md
 ```
 
 ---
 
-## ⚙️ Environment Variables Setup
+## 🚀 Getting Started (Local Setup)
 
-Create a `.env` file in the root directory and add the following keys. If you are running locally without some credentials, the application will automatically switch to fully functional local placeholders (such as an in-memory database and local base64/static media links):
+Follow these steps to clone and run **Community Hero** on your own machine.
 
-```env
-# Server Port (Do not alter inside Cloud Run environment)
-PORT=3000
+### Prerequisites
 
-# Required for Gemini AI vision and transcription features
-GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
+- **Node.js** ≥ 18.x (LTS recommended)
+- **npm** (bundled with Node)
+- Optional (the app runs without these, using in-memory fallbacks):
+  - A **MongoDB** instance (local or [MongoDB Atlas](https://www.mongodb.com/atlas))
+  - A **Redis** instance (local or hosted, e.g. Upstash/Redis Cloud)
+  - A **Cloudinary** account (media uploads)
+  - A **Google Gemini API key** ([Google AI Studio](https://aistudio.google.com/apikey))
+  - **Google OAuth** credentials ([Google Cloud Console](https://console.cloud.google.com/apis/credentials))
 
-# JWT encryption seed
-JWT_SECRET="YOUR_SUPER_SECRET_KEY"
+### 1. Clone the repository
 
-# Optional Cloudinary Configuration (Falls back to dummy base64 media resources if absent)
-CLOUDINARY_CLOUD_NAME="your_cloud_name"
-CLOUDINARY_API_KEY="your_api_key"
-CLOUDINARY_API_SECRET="your_api_secret"
-
-# Optional MongoDB Connection String (Falls back to resilient In-Memory DB if absent)
-MONGODB_URI="mongodb+srv://username:password@cluster.mongodb.net/database"
-
-# Optional Redis Cache (Falls back to local memory arrays if absent)
-REDIS_URL="redis://127.0.0.1:6379"
+```bash
+git clone https://github.com/<your-username>/community-hero.git
+cd community-hero
 ```
 
----
+### 2. Install dependencies
 
-## 🛠️ Local Development Guide
-
-### 1. Installation
-Install all base dependencies listed in the workspace project manifest:
 ```bash
 npm install
 ```
 
-### 2. Run the Server
-Boot both the backend Node service and the hot-reloading Vite server concurrently:
+### 3. Configure environment variables
+
+Copy the example file and fill in your own values:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env`:
+
+```env
+# Google Gemini AI (image/audio analysis, urgency scoring, chatbot)
+GEMINI_API_KEY=your_gemini_api_key
+
+# Base URL of the app (used for OAuth callback construction)
+APP_URL=http://localhost:3000
+
+# Google OAuth 2.0 credentials
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# MongoDB connection string (omit to auto-fallback to in-memory DB)
+MONGODB_URI=mongodb://localhost:27017/community-hero
+
+# Redis connection string (omit to auto-fallback to in-memory cache)
+REDIS_URL=redis://localhost:6379
+
+# Secret used to sign JWTs — use a long, random string in production
+JWT_SECRET=your_super_secret_jwt_key
+
+# Cloudinary media storage credentials
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+```
+
+> 💡 **No credentials? No problem.** Leave any/all of these blank and the app will automatically use an in-memory database, in-memory cache, placeholder media URLs, and heuristic (non-AI) analysis — perfect for a quick local trial.
+
+### 4. Run the app in development mode
+
 ```bash
 npm run dev
 ```
-Open `http://localhost:3000` inside your browser to start exploring!
 
-### 3. Verification & Auditing
-Run the codebase:
+This starts the Express server (with Vite in middleware mode for HMR) at:
+
+```
+http://localhost:3000
+```
+
+### 5. Build for production
+
 ```bash
-# Verify static typings
-npm run lint
-
-# Compile production bundle
 npm run build
+```
+
+This runs `vite build` for the frontend and bundles `server.ts` into `dist/server.cjs` via esbuild.
+
+### 6. Run the production build
+
+```bash
+npm start
+```
+
+This serves the compiled server + static frontend from `dist/`.
+
+### 7. (Optional) Clean build artifacts
+
+```bash
+npm run clean
+```
+
+### 8. (Optional) Type-check the project
+
+```bash
+npm run lint
 ```
 
 ---
 
+## 🔑 Environment Variables
 
+| Variable | Required | Description |
+|---|---|---|
+| `GEMINI_API_KEY` | Recommended | Enables real Gemini-powered image/audio analysis, urgency scoring & chatbot. Falls back to heuristics if unset. |
+| `APP_URL` | Recommended | Public base URL of the app, used to build the Google OAuth callback URL. |
+| `GOOGLE_CLIENT_ID` | Optional | Google OAuth 2.0 Client ID for "Sign in with Google". |
+| `GOOGLE_CLIENT_SECRET` | Optional | Google OAuth 2.0 Client Secret. |
+| `MONGODB_URI` | Optional | MongoDB connection string. Falls back to an in-memory store if unset/unreachable. |
+| `REDIS_URL` | Optional | Redis connection string. Falls back to an in-memory cache if unset/unreachable. |
+| `JWT_SECRET` | **Yes (production)** | Secret key for signing/verifying JWT auth tokens. |
+| `CLOUDINARY_CLOUD_NAME` | Optional | Cloudinary cloud name for media uploads. |
+| `CLOUDINARY_API_KEY` | Optional | Cloudinary API key. |
+| `CLOUDINARY_API_SECRET` | Optional | Cloudinary API secret. |
+| `GOOGLE_MAPS_PLATFORM_KEY` | Optional | Enables Google Geolocation/Geocoding for auto-detecting & reverse-geocoding report locations (falls back to OpenStreetMap Nominatim). |
+
+---
+
+## 📜 Available Scripts
+
+| Script | Command | Description |
+|---|---|---|
+| Dev server | `npm run dev` | Runs `tsx server.ts` — Express + Vite middleware with HMR |
+| Build | `npm run build` | Builds the frontend (Vite) and bundles the server (esbuild) into `dist/` |
+| Start | `npm start` | Runs the production build (`dist/server.cjs`) |
+| Clean | `npm run clean` | Removes `dist/` and `server.js` |
+| Lint / Type-check | `npm run lint` | Runs `tsc --noEmit` across the project |
+
+---
+
+## 🔌 API Reference
+
+Base URL: `/api`
+
+### Auth — `/api/auth`
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/register` | Create a new account |
+| POST | `/login` | Email/password login |
+| POST | `/logout` | Clear auth session |
+| GET | `/me` | Get current authenticated user *(protected)* |
+| GET | `/google` | Initiate Google OAuth login |
+| GET | `/google/callback` | Google OAuth callback handler |
+
+### Reports — `/api/reports`
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/` | List reports (filterable by `category`, `status`; paginated) |
+| POST | `/` | Create a report *(protected — awards XP/coins)* |
+| PUT | `/:id` | Update a report *(protected)* |
+| DELETE | `/:id` | Delete a report *(protected)* |
+| POST | `/:id/upvote` | Upvote a report *(protected)* |
+| GET | `/:id/comments` | Get comments on a report |
+| POST | `/:id/comments` | Add a comment *(protected)* |
+| POST | `/analyze-image` | AI image analysis → category/severity/description *(protected, multipart)* |
+| POST | `/transcribe-audio` | AI audio transcription → transcript/description *(protected, multipart)* |
+
+### Users — `/api/users`
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/` | List all users |
+| GET | `/:id` | Get a user's public profile |
+| PUT | `/:id` | Update avatar *(protected)* |
+| POST | `/:id/redeem` | Redeem coins for a store item *(protected)* |
+| DELETE | `/:id` | Delete account *(protected)* |
+
+### Leaderboard — `/api/leaderboard`
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/` | Global XP leaderboard (includes current user's rank if authenticated) |
+
+### Notices — `/api/notices`
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/` | List public notices |
+| POST | `/` | Create a notice |
+| PUT | `/:id` | Update a notice |
+| DELETE | `/:id` | Delete a notice |
+
+### Admin — `/api/admin` *(all protected by admin JWT)*
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/login` / `/logout` | Admin authentication |
+| GET | `/stats` | Dashboard analytics |
+| GET | `/complaints` | List all complaints |
+| PUT | `/complaints/:id/status` | Update complaint status |
+| GET | `/complaints/:id/comments` | View comments on a complaint |
+| POST | `/complaints/:id/urgency-score` | AI-generated urgency score |
+| GET | `/suggestions/:reportId` | AI resolution suggestions |
+| POST | `/chat` | AI admin chatbot |
+| GET | `/users` | List all users |
+| DELETE | `/users/:id` | Delete a user |
+| POST | `/users/:id/ban` | Ban a user |
+
+### Misc
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/health` | Health check |
+| GET | `/api/geocode` | Reverse-geocode coordinates (Google Maps → OpenStreetMap → raw fallback) |
+
+---
+
+## 🏆 Gamification System
+
+| Action | Reward |
+|---|---|
+| Submitting a report | +10 XP, +10 coins |
+| Reaching XP milestones | Level up (`level = floor(xp / 500) + 1`) |
+| First report submitted | 🥇 "First Report" badge |
+| 10 reports submitted | 🏆 "10 Reports" badge |
+| Accumulating coins | Redeemable in the **Redeem Store** |
+| Highest XP | Top of the **Leaderboard** |
+
+---
+
+## 🛡️ Resilience & Fallback Design
+
+Community Hero is designed to **run anywhere, instantly**, even with zero configuration:
+
+| Dependency | If configured | If missing/unreachable |
+|---|---|---|
+| MongoDB | Persists to a real database | Auto-switches to an in-memory store, pre-seeded with demo data |
+| Redis | Real distributed cache | Auto-switches to an in-memory Map-based cache |
+| Cloudinary | Uploads real images/audio | Returns curated placeholder media URLs |
+| Gemini API | Real multimodal AI analysis | Falls back to filename-based heuristics for classification |
+| Google Maps key | Real geocoding | Falls back to OpenStreetMap Nominatim, then raw coordinates |
+
+The Gemini integration additionally implements **multi-model failover** (trying several Gemini model variants in sequence), **per-model cooldowns** on quota exhaustion, and **exponential backoff retries** on transient `503` errors — plus a resilient `safeJsonParse` that repairs malformed JSON before falling back to regex-based field extraction.
+
+---
+
+## ☁️ Deployment
+
+The live instance is deployed on **Google Cloud Run**:
+👉 [https://community-hero-76238719535.asia-southeast1.run.app](https://community-hero-76238719535.asia-southeast1.run.app/auth)
+
+This project was originally built and iterated on using **[Google AI Studio](https://aistudio.google.com/)**, which auto-injects `GEMINI_API_KEY` and `APP_URL` at runtime via its Secrets panel and deploys directly to Cloud Run.
+
+To deploy your own instance elsewhere:
+1. Run `npm run build` to produce `dist/`.
+2. Set all required environment variables on your host (see [Environment Variables](#-environment-variables)).
+3. Start the server with `npm start` (or `node dist/server.cjs`).
+4. Ensure your host listens on the port the app binds (`3000` by default) and forwards traffic accordingly.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome!
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m "Add your feature"`
+4. Push to the branch: `git push origin feature/your-feature`
+5. Open a Pull Request
+
+Please run `npm run lint` before submitting a PR to ensure type safety.
+
+---
+
+## 📄 License
+
+This project is provided as-is for educational and community-benefit purposes. Add a `LICENSE` file to formally define usage terms.
+
+---
+
+<p align="center">Made with ❤️ for stronger, more responsive communities — powered by Google AI Studio & Gemini.</p>
