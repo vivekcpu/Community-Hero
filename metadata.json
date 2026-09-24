@@ -1,0 +1,6 @@
+{
+  "name": "Community Hero",
+  "description": "A civic issue-reporting platform with multimodal AI, gamification, and a social feed.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

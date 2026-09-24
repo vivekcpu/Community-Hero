@@ -1,0 +1,147 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --bg-tertiary: #e5e7eb;
+  --accent: #58cc02;        /* Duolingo Green */
+  --accent-dark: #46a302;
+  --accent-light: #84d640;
+  --text-primary: #3c3c3c;
+  --text-secondary: #777777;
+  --text-muted: #afafaf;
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(88, 204, 2, 0.2);
+  --neo-shadow-dark: #d1d9e6;
+  --neo-shadow-light: #ffffff;
+  --coin-color: #ffc800;
+}
+
+/* Base resets & styles matching mobile-first Airy design */
+body {
+  background-color: #f7f9fa;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Animations specifications */
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 0.3; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+@keyframes waveform {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes fade-left {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* CSS Utilities for components */
+.animate-pulse-ring {
+  animation: pulse-ring 2s infinite ease-in-out;
+}
+
+.animate-waveform {
+  animation: waveform 1.2s infinite ease-in-out;
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s ease-out forwards;
+}
+
+.animate-fade-left {
+  animation: fade-left 0.4s ease-out forwards;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+/* Pressable Bouncy primary button style */
+.btn-bouncy {
+  background-color: var(--accent);
+  color: white;
+  border-radius: 12px;
+  font-weight: 700;
+  box-shadow: 0 4px 0 var(--accent-dark);
+  transition: all 0.1s ease;
+}
+
+.btn-bouncy:active {
+  transform: translateY(4px);
+  box-shadow: 0 0px 0 var(--accent-dark);
+}
+
+.btn-bouncy:disabled {
+  background-color: #afafaf;
+  box-shadow: 0 4px 0 #8c8c8c;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Hide scrollbar globally across all elements via webkit */
+::-webkit-scrollbar {
+  display: none;
+  width: 0px;
+  background: transparent;
+}
+
+/* Hide scrollbar for Firefox */
+* {
+  scrollbar-width: none;
+}
+
+/* Hide scrollbar for IE/Edge */
+* {
+  -ms-overflow-style: none;
+}
+
+/* Clean spacing and custom focus indicators */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(88, 204, 2, 0.2);
+}
+
+/* Disable text selection on divs and text contents using webkit / user-select */
+div, p, span, h1, h2, h3, h4, h5, h6, li, section, article, body {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Allow selection in inputs, textareas, and any editable areas */
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+
